@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pits Burger Kassen-App</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#111827">
+  <style>
+    :root{--bg:#f4f5f7;--card:#fff;--text:#111827;--muted:#6b7280;--line:#e5e7eb;--accent:#111827;--danger:#b91c1c;--ok:#047857;--warn:#b45309}
+    *{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);color:var(--text)}
+    header{position:sticky;top:0;z-index:5;background:var(--accent);color:#fff;padding:14px 16px}h1{font-size:20px;margin:0}.sub{font-size:12px;opacity:.8;margin-top:3px}
+    main{padding:14px;max-width:920px;margin:0 auto}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    h2{font-size:17px;margin:0 0 10px}label{font-size:13px;font-weight:700;margin:8px 0 4px;display:block;color:#374151}
+    input,select,button,textarea{font:inherit}input,select,textarea{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:12px;background:#fff}input[type=number]{text-align:right}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    button{border:0;border-radius:12px;padding:12px 14px;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}button.secondary{background:#e5e7eb;color:#111827}button.danger{background:var(--danger)}button.ok{background:var(--ok)}button:active{transform:scale(.99)}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.pill{padding:8px 10px;background:#f3f4f6;border-radius:999px;font-size:13px}.big{font-size:26px;font-weight:800}.muted{color:var(--muted);font-size:13px}.oktxt{color:var(--ok);font-weight:800}.warntxt{color:var(--warn);font-weight:800}.dangertxt{color:var(--danger);font-weight:800}
+    table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px;border-bottom:1px solid var(--line);text-align:left}td.num,th.num{text-align:right}
+    .summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}.sumBox{background:#f9fafb;border:1px solid var(--line);border-radius:14px;padding:12px}.sumBox .label{font-size:12px;color:var(--muted);font-weight:700}.sumBox .val{font-size:20px;font-weight:900;margin-top:2px}
+    #app{display:none}.login{max-width:420px;margin:40px auto}.hide{display:none!important}.smallbtn{padding:8px 10px;font-size:13px}.footerSpace{height:40px}
+    @media(max-width:620px){.grid,.grid3,.summary{grid-template-columns:1fr}.card{border-radius:14px}main{padding:10px} th,td{font-size:13px;padding:7px 4px}.wideBtns button{width:100%;}}
+    @media print{header,.noPrint,.login{display:none!important}body{background:#fff}main{max-width:none}.card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}.printOnly{display:block!important}}
+  </style>
+</head>
+<body>
+<header><h1>Pits Burger Kassen-App</h1><div class="sub">Tagesabschluss · 7% / 19% · Monatsbericht</div></header>
+
+<main id="login" class="login card">
+  <h2>PIN-Schutz</h2>
+  <p class="muted">Beim ersten Start PIN festlegen. Danach mit PIN anmelden.</p>
+  <label>PIN</label><input id="pinInput" inputmode="numeric" type="password" placeholder="z. B. 1234">
+  <div class="row" style="margin-top:10px"><button id="pinBtn">Weiter</button><button class="secondary" id="resetPinBtn" type="button">PIN zurücksetzen</button></div>
+  <p id="pinMsg" class="muted"></p>
+</main>
+
+<main id="app">
+  <div class="card noPrint">
+    <h2>Grunddaten</h2>
+    <div class="grid3">
+      <div><label>Filiale</label><select id="branch"><option>Schorndorf</option><option>Plüderhausen</option><option>Urbach</option></select></div>
+      <div><label>Datum</label><input id="date" type="date"></div>
+      <div><label>Monat</label><input id="month" type="month"></div>
+    </div>
+  </div>
+
+  <div class="card noPrint">
+    <h2>Kassenbestand</h2>
+    <div class="grid">
+      <div><label>Anfangsbestand / Wechselgeld</label><input id="startCash" type="number" step="0.01" value="200"></div>
+      <div><label>Endbestand Kasse</label><input id="endCash" type="number" step="0.01" placeholder="0,00"></div>
+    </div>
+    <div style="margin-top:12px" class="sumBox"><div class="label">Berechneter Barumsatz</div><div class="val" id="cashRevenue">0,00 €</div></div>
+  </div>
+
+  <div class="card noPrint">
+    <h2>Umsatz-Aufteilung</h2>
+    <div class="grid">
+      <div><label>7% Umsatz, z. B. Essen</label><input id="tax7" type="number" step="0.01" placeholder="0,00"></div>
+      <div><label>19% Umsatz, z. B. Getränke</label><input id="tax19" type="number" step="0.01" placeholder="0,00"></div>
+    </div>
+    <div class="summary" style="margin-top:12px">
+      <div class="sumBox"><div class="label">7% + 19%</div><div class="val" id="taxTotal">0,00 €</div></div>
+      <div class="sumBox"><div class="label">Differenz zu Barumsatz</div><div class="val" id="diff">0,00 €</div></div>
+    </div>
+    <p id="checkMsg" class="muted"></p>
+  </div>
+
+  <div class="card noPrint">
+    <h2>Ausgaben / Belege</h2>
+    <div class="grid3">
+      <div><label>Beschreibung</label><input id="expenseName" placeholder="z. B. Metro"></div>
+      <div><label>Betrag</label><input id="expenseAmount" type="number" step="0.01" placeholder="0,00"></div>
+      <div><label>&nbsp;</label><button id="addExpense" type="button">Ausgabe hinzufügen</button></div>
+    </div>
+    <table id="expenseTable"><thead><tr><th>Beschreibung</th><th class="num">Betrag</th><th></th></tr></thead><tbody></tbody></table>
+  </div>
+
+  <div class="card noPrint">
+    <h2>Tagesnotiz</h2>
+    <textarea id="note" rows="3" placeholder="z. B. Differenz erklärt, Wechselgeld entnommen, besonderer Vorfall"></textarea>
+  </div>
+
+  <div class="card noPrint">
+    <h2>Speichern & Export</h2>
+    <div class="row wideBtns">
+      <button class="ok" id="saveDay">Tagesabschluss speichern</button>
+      <button id="showDayReport">Tagesbericht anzeigen</button>
+      <button id="exportExcel">Excel-Datei exportieren</button>
+      <button class="secondary" id="printReport">PDF drucken/speichern</button>
+      <button class="danger" id="deleteDay">Tag löschen</button>
+    </div>
+    <p class="muted">Die Daten werden lokal auf diesem Gerät gespeichert.</p>
+  </div>
+
+  <div class="card">
+    <h2>Monatsübersicht</h2>
+    <div class="summary">
+      <div class="sumBox"><div class="label">Umsatz 7%</div><div class="val" id="m7">0,00 €</div></div>
+      <div class="sumBox"><div class="label">Umsatz 19%</div><div class="val" id="m19">0,00 €</div></div>
+      <div class="sumBox"><div class="label">Barumsatz</div><div class="val" id="mCash">0,00 €</div></div>
+      <div class="sumBox"><div class="label">Ausgaben</div><div class="val" id="mExpenses">0,00 €</div></div>
+    </div>
+    <div style="overflow:auto;margin-top:10px"><table id="monthTable"><thead><tr><th>Datum</th><th>Filiale</th><th class="num">Bar</th><th class="num">7%</th><th class="num">19%</th><th class="num">Diff.</th></tr></thead><tbody></tbody></table></div>
+  </div>
+
+  <div id="report" class="card hide"></div>
+  <div class="footerSpace"></div>
+</main>
+
+<script>
+(function(){
+  const KEY='pits_kassen_app_v1'; const PIN='pits_kassen_pin_v1';
+  const $=id=>document.getElementById(id);
+  const money=n=>(Number(n)||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €';
+  const num=v=>Number(String(v||'').replace(',','.'))||0;
+  const ymd=d=>d.toISOString().slice(0,10);
+  const ym=d=>d.toISOString().slice(0,7);
+  let data=load(); let expenses=[];
+  function load(){try{return JSON.parse(localStorage.getItem(KEY))||{days:{}}}catch(e){return{days:{}}}}
+  function persist(){localStorage.setItem(KEY,JSON.stringify(data))}
+  function dayKey(){return $('branch').value+'|'+$('date').value}
+  function calc(){const start=num($('startCash').value), end=num($('endCash').value), cash=end-start, t7=num($('tax7').value), t19=num($('tax19').value), tt=t7+t19, diff=cash-tt; $('cashRevenue').textContent=money(cash); $('taxTotal').textContent=money(tt); $('diff').textContent=money(diff); $('diff').className='val '+(Math.abs(diff)<0.005?'oktxt':'dangertxt'); $('checkMsg').textContent=Math.abs(diff)<0.005?'Passt: 7% + 19% entspricht dem Barumsatz.':'Achtung: 7% + 19% entspricht nicht dem Barumsatz.'; $('checkMsg').className=Math.abs(diff)<0.005?'oktxt':'dangertxt'; return{start,end,cash,t7,t19,tt,diff}}
+  function renderExpenses(){const tb=$('expenseTable').querySelector('tbody'); tb.innerHTML=''; expenses.forEach((e,i)=>{const tr=document.createElement('tr'); tr.innerHTML='<td>'+escapeHtml(e.name)+'</td><td class="num">'+money(e.amount)+'</td><td class="num"><button class="danger smallbtn" data-i="'+i+'">X</button></td>'; tb.appendChild(tr)}); tb.querySelectorAll('button').forEach(b=>b.onclick=()=>{expenses.splice(+b.dataset.i,1); renderExpenses()})}
+  function loadDay(){const k=dayKey(), d=data.days[k]; expenses=[]; if(d){$('startCash').value=d.start; $('endCash').value=d.end; $('tax7').value=d.t7; $('tax19').value=d.t19; $('note').value=d.note||''; expenses=d.expenses||[]}else{$('startCash').value=200;$('endCash').value='';$('tax7').value='';$('tax19').value='';$('note').value=''} renderExpenses(); calc(); renderMonth(); $('report').classList.add('hide')}
+  function saveDay(){const c=calc(); data.days[dayKey()]={branch:$('branch').value,date:$('date').value,month:$('date').value.slice(0,7),start:c.start,end:c.end,cash:c.cash,t7:c.t7,t19:c.t19,diff:c.diff,expenses:[...expenses],note:$('note').value||''}; persist(); renderMonth(); showDayReport(); alert('Tagesabschluss gespeichert.')}
+  function addExpense(){const name=$('expenseName').value.trim(), amount=num($('expenseAmount').value); if(!name||!amount){alert('Beschreibung und Betrag eintragen.');return} expenses.push({name,amount}); $('expenseName').value=''; $('expenseAmount').value=''; renderExpenses()}
+  function deleteDay(){if(confirm('Diesen Tagesabschluss löschen?')){delete data.days[dayKey()]; persist(); loadDay()}}
+  function monthDays(){const m=$('month').value; return Object.values(data.days).filter(d=>d.month===m).sort((a,b)=>(a.date+a.branch).localeCompare(b.date+b.branch))}
+  function renderMonth(){const rows=monthDays(); let s7=0,s19=0,sc=0,se=0; const tb=$('monthTable').querySelector('tbody'); tb.innerHTML=''; rows.forEach(d=>{const exp=(d.expenses||[]).reduce((a,e)=>a+num(e.amount),0); s7+=d.t7;s19+=d.t19;sc+=d.cash;se+=exp; const tr=document.createElement('tr'); tr.innerHTML='<td>'+formatDate(d.date)+'</td><td>'+d.branch+'</td><td class="num">'+money(d.cash)+'</td><td class="num">'+money(d.t7)+'</td><td class="num">'+money(d.t19)+'</td><td class="num '+(Math.abs(d.diff)<.005?'oktxt':'dangertxt')+'">'+money(d.diff)+'</td>'; tb.appendChild(tr)}); $('m7').textContent=money(s7); $('m19').textContent=money(s19); $('mCash').textContent=money(sc); $('mExpenses').textContent=money(se)}
+  function showDayReport(){const d=data.days[dayKey()]||{branch:$('branch').value,date:$('date').value,...calc(),expenses, note:$('note').value}; const expTotal=(d.expenses||[]).reduce((a,e)=>a+num(e.amount),0); $('report').classList.remove('hide'); $('report').innerHTML='<h2>Tagesbericht</h2><p><b>Filiale:</b> '+d.branch+'<br><b>Datum:</b> '+formatDate(d.date)+'</p><div class="summary"><div class="sumBox"><div class="label">Anfangsbestand</div><div class="val">'+money(d.start)+'</div></div><div class="sumBox"><div class="label">Endbestand</div><div class="val">'+money(d.end)+'</div></div><div class="sumBox"><div class="label">Barumsatz</div><div class="val">'+money(d.cash)+'</div></div><div class="sumBox"><div class="label">Differenz</div><div class="val '+(Math.abs(d.diff)<.005?'oktxt':'dangertxt')+'">'+money(d.diff)+'</div></div></div><h3>Steueraufteilung</h3><table><tr><td>7% Umsatz</td><td class="num">'+money(d.t7)+'</td></tr><tr><td>19% Umsatz</td><td class="num">'+money(d.t19)+'</td></tr><tr><th>Gesamt</th><th class="num">'+money(d.t7+d.t19)+'</th></tr></table><h3>Ausgaben</h3>'+expenseHtml(d.expenses)+'<p><b>Ausgaben gesamt:</b> '+money(expTotal)+'</p>'+(d.note?'<h3>Notiz</h3><p>'+escapeHtml(d.note)+'</p>':'')}
+  function expenseHtml(exps){if(!exps||!exps.length)return'<p class="muted">Keine Ausgaben eingetragen.</p>'; return '<table>'+exps.map(e=>'<tr><td>'+escapeHtml(e.name)+'</td><td class="num">'+money(e.amount)+'</td></tr>').join('')+'</table>'}
+  function exportExcel(){ const rows=monthDays(); let html='<html><head><meta charset="utf-8"></head><body><h2>Pits Burger Monatsbericht Kasse</h2><p>Monat: '+$('month').value+'</p><table border="1"><tr><th>Datum</th><th>Filiale</th><th>Anfang</th><th>Ende</th><th>Barumsatz</th><th>7%</th><th>19%</th><th>Differenz</th><th>Ausgaben</th><th>Notiz</th></tr>'; let s7=0,s19=0,sc=0,se=0; rows.forEach(d=>{const ex=(d.expenses||[]).reduce((a,e)=>a+num(e.amount),0); s7+=d.t7;s19+=d.t19;sc+=d.cash;se+=ex; html+='<tr><td>'+formatDate(d.date)+'</td><td>'+d.branch+'</td><td>'+d.start.toFixed(2)+'</td><td>'+d.end.toFixed(2)+'</td><td>'+d.cash.toFixed(2)+'</td><td>'+d.t7.toFixed(2)+'</td><td>'+d.t19.toFixed(2)+'</td><td>'+d.diff.toFixed(2)+'</td><td>'+ex.toFixed(2)+'</td><td>'+escapeHtml(d.note||'')+'</td></tr>'}); html+='<tr><th colspan="4">Gesamt</th><th>'+sc.toFixed(2)+'</th><th>'+s7.toFixed(2)+'</th><th>'+s19.toFixed(2)+'</th><th></th><th>'+se.toFixed(2)+'</th><th></th></tr></table></body></html>'; const blob=new Blob([html],{type:'application/vnd.ms-excel'}); download(blob,'Kassenbericht_'+$('month').value+'.xls') }
+  function download(blob,filename){const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+  function formatDate(s){if(!s)return''; const [y,m,d]=s.split('-'); return d+'.'+m+'.'+y}
+  function escapeHtml(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+  function initPin(){ $('pinBtn').onclick=()=>{const p=$('pinInput').value.trim(); if(!p){$('pinMsg').textContent='Bitte PIN eingeben.';return} const saved=localStorage.getItem(PIN); if(!saved){localStorage.setItem(PIN,p); openApp(); return} if(saved===p){openApp()}else{$('pinMsg').textContent='PIN falsch.'}}; $('resetPinBtn').onclick=()=>{if(confirm('PIN auf diesem Gerät zurücksetzen?')){localStorage.removeItem(PIN);$('pinMsg').textContent='PIN gelöscht. Neue PIN eingeben.'}} }
+  function openApp(){ $('login').style.display='none'; $('app').style.display='block'; const now=new Date(); $('date').value=ymd(now); $('month').value=ym(now); loadDay() }
+  ['startCash','endCash','tax7','tax19'].forEach(id=>$(id).addEventListener('input',calc)); $('branch').onchange=loadDay; $('date').onchange=()=>{$('month').value=$('date').value.slice(0,7);loadDay()}; $('month').onchange=renderMonth; $('addExpense').onclick=addExpense; $('saveDay').onclick=saveDay; $('deleteDay').onclick=deleteDay; $('showDayReport').onclick=showDayReport; $('printReport').onclick=()=>{showDayReport(); setTimeout(()=>print(),100)}; $('exportExcel').onclick=exportExcel; initPin(); if('serviceWorker' in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
+})();
+</script>
+</body>
+</html>
