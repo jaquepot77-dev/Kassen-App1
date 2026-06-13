@@ -13,7 +13,7 @@
 <div class="wrap">
   <section id="pinBox" class="card noPrint">
     <h2>PIN-Schutz</h2>
-    <p class="muted small">Fester PIN: 2026. Keine PIN-Speicherung im Browser.</p>
+    <p class="muted small"><b>Version PIN-Fix 2026</b><br>Fester PIN: 2026. Alte gespeicherte PINs werden ignoriert.</p>
     <div class="grid two"><div><label>PIN</label><input id="pinInput" type="password" inputmode="numeric" placeholder="PIN eingeben"></div><div style="align-self:end"><button id="pinBtn">Entsperren</button></div></div>
     <p id="pinMsg" class="small"></p>
   </section>
@@ -74,7 +74,7 @@
   </main>
 </div>
 <script>
-const STORE='kassenAppUrbach_v2_data'; const FIXED_PIN='2026';
+const STORE='kassenAppUrbach_v2_data'; const FIXED_PIN='2026'; try{localStorage.removeItem('kassenAppPin');localStorage.removeItem('kassenPin');localStorage.removeItem('kassenAppUrbach_pin');localStorage.removeItem('kassenApp_pinHash');}catch(e){}
 let state={days:{}}; let currentExpenses=[];
 const $=id=>document.getElementById(id);
 function money(n){return (Number(n)||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}
