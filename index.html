@@ -13,12 +13,12 @@
 <div class="wrap">
   <section id="pinBox" class="card noPrint">
     <h2>PIN-Schutz</h2>
-    <p class="muted small">Beim ersten Start PIN festlegen. Danach mit PIN entsperren.</p>
-    <div class="grid two"><div><label>PIN</label><input id="pinInput" type="password" inputmode="numeric" placeholder="PIN eingeben"></div><div style="align-self:end"><button id="pinBtn">Entsperren / PIN speichern</button></div></div>
+    <p class="muted small">Fester PIN: 2026. Keine PIN-Speicherung im Browser.</p>
+    <div class="grid two"><div><label>PIN</label><input id="pinInput" type="password" inputmode="numeric" placeholder="PIN eingeben"></div><div style="align-self:end"><button id="pinBtn">Entsperren</button></div></div>
     <p id="pinMsg" class="small"></p>
   </section>
   <main id="app" class="hidden">
-    <section class="card noPrint"><div class="row"><button class="secondary" id="logoutBtn">Sperren</button><button class="secondary" id="changePinBtn">PIN ändern</button><button class="danger" id="clearBtn">Alle Daten löschen</button></div></section>
+    <section class="card noPrint"><div class="row"><button class="secondary" id="logoutBtn">Sperren</button><button class="danger" id="clearBtn">Alle Daten löschen</button></div></section>
 
     <section class="card noPrint">
       <h2>Tagesabschluss Urbach</h2>
@@ -74,7 +74,7 @@
   </main>
 </div>
 <script>
-const STORE='kassenAppUrbach_v1'; const PIN='kassenAppUrbach_pin';
+const STORE='kassenAppUrbach_v2_data'; const FIXED_PIN='2026';
 let state={days:{}}; let currentExpenses=[];
 const $=id=>document.getElementById(id);
 function money(n){return (Number(n)||0).toLocaleString('de-DE',{minimumFractionDigits:2,maximumFractionDigits:2})+' €'}
@@ -94,15 +94,15 @@ function showReport(){const d=state.days[$('date').value]||getDay(); const c=cal
 function formatDate(s){if(!s)return''; const [y,m,d]=s.split('-'); return d+'.'+m+'.'+y}
 function renderMonth(){const m=$('month').value; const days=Object.values(state.days).filter(d=>d.date&&d.date.startsWith(m)).sort((a,b)=>a.date.localeCompare(b.date)); let totals={cash:0,vat7:0,vat19:0,exp:0,days:0}; days.forEach(d=>{const c=calcDay(d); totals.cash+=c.cashSales; totals.vat7+=d.vat7; totals.vat19+=d.vat19; totals.exp+=c.expensesTotal; totals.days++;}); let rows=days.map(d=>{const c=calcDay(d); return '<tr><td>'+formatDate(d.date)+'</td><td>'+money(c.cashSales)+'</td><td>'+money(d.vat7)+'</td><td>'+money(d.vat19)+'</td><td>'+money(c.expensesTotal)+'</td></tr>'}).join('')||'<tr><td colspan="5">Noch keine Tagesabschlüsse in diesem Monat.</td></tr>'; $('monthSummary').innerHTML='<div class="result"><div class="metric"><b>Tage</b><span>'+totals.days+'</span></div><div class="metric"><b>Barumsatz Monat</b><span>'+money(totals.cash)+'</span></div><div class="metric"><b>Umsatz 7 %</b><span>'+money(totals.vat7)+'</span></div><div class="metric"><b>Umsatz 19 %</b><span>'+money(totals.vat19)+'</span></div></div><table style="margin-top:10px"><tr><th>Datum</th><th>Bar</th><th>7%</th><th>19%</th><th>Ausgaben</th></tr>'+rows+'</table>'}
 function exportExcel(){const m=$('month').value; const days=Object.values(state.days).filter(d=>d.date&&d.date.startsWith(m)).sort((a,b)=>a.date.localeCompare(b.date)); let html='<html><head><meta charset="utf-8"></head><body><h1>Kassenbericht Urbach '+m+'</h1><table border="1"><tr><th>Datum</th><th>Anfangsbestand</th><th>Endbestand</th><th>Barumsatz</th><th>Umsatz 7%</th><th>Umsatz 19%</th><th>Differenz</th><th>Ausgaben</th><th>Ausgaben Details</th></tr>'; let t={start:0,end:0,cash:0,v7:0,v19:0,diff:0,exp:0}; days.forEach(d=>{const c=calcDay(d); t.cash+=c.cashSales;t.v7+=d.vat7;t.v19+=d.vat19;t.diff+=c.diff;t.exp+=c.expensesTotal; const detail=(d.expenses||[]).map(e=>(e.name||'Ausgabe')+' '+money(e.amount)).join(' | '); html+='<tr><td>'+formatDate(d.date)+'</td><td>'+money(d.startCash)+'</td><td>'+money(d.endCash)+'</td><td>'+money(c.cashSales)+'</td><td>'+money(d.vat7)+'</td><td>'+money(d.vat19)+'</td><td>'+money(c.diff)+'</td><td>'+money(c.expensesTotal)+'</td><td>'+escapeHtml(detail)+'</td></tr>'}); html+='<tr><td><b>Monat gesamt</b></td><td></td><td></td><td><b>'+money(t.cash)+'</b></td><td><b>'+money(t.v7)+'</b></td><td><b>'+money(t.v19)+'</b></td><td><b>'+money(t.diff)+'</b></td><td><b>'+money(t.exp)+'</b></td><td></td></tr></table></body></html>'; const blob=new Blob([html],{type:'application/vnd.ms-excel'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='Kassenbericht_Urbach_'+m+'.xls'; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-function unlock(){const stored=localStorage.getItem(PIN); const val=$('pinInput').value.trim(); if(!val){$('pinMsg').textContent='Bitte PIN eingeben.';return} if(!stored){localStorage.setItem(PIN,val); openApp();return} if(val===stored){openApp();} else {$('pinMsg').textContent='PIN falsch.';$('pinMsg').className='small bad'}}
+function unlock(){const val=$('pinInput').value.trim(); if(!val){$('pinMsg').textContent='Bitte PIN eingeben.';return} if(val===FIXED_PIN){$('pinMsg').textContent=''; openApp();} else {$('pinMsg').textContent='PIN falsch.';$('pinMsg').className='small bad'}}
 function openApp(){$('pinBox').classList.add('hidden');$('app').classList.remove('hidden');load();initFields();}
 function initFields(){if(!$('date').value)$('date').value=today(); if(!$('month').value)$('month').value=monthNow(); loadDate(); renderMonth();}
 ['startCash','endCash','vat7','vat19'].forEach(id=>$(id).addEventListener('input',renderCalc));
 $('date').addEventListener('change',loadDate); $('month').addEventListener('change',renderMonth);
 $('addExpenseBtn').onclick=()=>{const name=$('expenseName').value.trim()||'Ausgabe'; const amount=num($('expenseAmount').value); if(amount<=0)return; currentExpenses.push({name,amount}); $('expenseName').value=''; $('expenseAmount').value=''; renderCalc();}
 $('saveDayBtn').onclick=saveDay; $('showReportBtn').onclick=()=>{saveDay();showReport();}; $('printBtn').onclick=()=>{showReport(); setTimeout(()=>window.print(),100)}; $('excelBtn').onclick=exportExcel; $('refreshMonthBtn').onclick=renderMonth;
-$('pinBtn').onclick=unlock; $('pinInput').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()}); $('logoutBtn').onclick=()=>{$('app').classList.add('hidden');$('pinBox').classList.remove('hidden');$('pinInput').value=''}; $('changePinBtn').onclick=()=>{const p=prompt('Neue PIN eingeben'); if(p){localStorage.setItem(PIN,p); alert('PIN geändert')}}; $('clearBtn').onclick=()=>{if(confirm('Wirklich alle Kassen-Daten auf diesem Gerät löschen?')){localStorage.removeItem(STORE); state={days:{}}; initFields();}};
+$('pinBtn').onclick=unlock; $('pinInput').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()}); $('logoutBtn').onclick=()=>{$('app').classList.add('hidden');$('pinBox').classList.remove('hidden');$('pinInput').value=''}; $('clearBtn').onclick=()=>{if(confirm('Wirklich alle Kassen-Daten auf diesem Gerät löschen?')){localStorage.removeItem(STORE); state={days:{}}; initFields();}};
 if('serviceWorker'in navigator){navigator.serviceWorker.register('sw.js').catch(()=>{})}
-if(localStorage.getItem(PIN)){ $('pinBtn').textContent='Entsperren'; } else { $('pinBtn').textContent='PIN speichern & öffnen'; }
+$('pinBtn').textContent='Entsperren';
 </script>
 </body></html>

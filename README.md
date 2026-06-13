@@ -1,27 +1,10 @@
-# Pits Burger Kassen-App
+# Pits Burger Kassen-App Urbach
 
-## GitHub Pages Upload
+PIN: 2026
 
-Diese Dateien müssen direkt ins Repository hochgeladen werden:
-
+Dateien direkt ins GitHub Repository hochladen:
 - index.html
 - manifest.json
 - sw.js
 
-Danach in GitHub:
-
-1. Repository öffnen
-2. Settings öffnen
-3. Pages öffnen
-4. Source: Deploy from a branch
-5. Branch: main
-6. Folder: / (root)
-7. Save
-
-Die App ist danach erreichbar unter:
-
-https://DEIN-GITHUB-NAME.github.io/DEIN-REPOSITORY-NAME/
-
-## Wichtig
-
-Die Daten werden lokal im Browser des jeweiligen Geräts gespeichert.
+Danach GitHub Pages aktivieren: Settings → Pages → main → /(root).
